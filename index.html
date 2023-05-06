@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My Ping Map</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+    <style>
+      #map {
+        height: 500px;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>My Ping Map</h1>
+    <form>
+      <label for="url">URL:</label>
+      <input type="text" id="url" name="url" value="google.com">
+      <button type="button" onclick="updateMap()">Update Map</button>
+    </form>
+    <div id="map"></div>
+    <script>
+      var map;
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: {lat: 0, lng: 0},
+          zoom: 2
+        });
+      }
+      function updateMap() {
+        var url = document.getElementById('url').value;
+        fetch(`/ping?url=${url}`)
+          .then(response => response.json())
+          .then(data => {
+            var locations = data.locations;
+            var bounds = new google.maps.LatLngBounds();
+            var markers = locations.map(location => {
+              var marker = new google.maps.Marker({
+                position: location,
+                map: map,
+                label: `${location.lat}, ${location.lng}`
+              });
+              bounds.extend(location);
+              return marker;
+            });
+            var route = new google.maps.Polyline({
+              path: locations,
+              geodesic: true,
+              strokeColor: '#FF0000',
+              strokeOpacity: 1.0,
+              strokeWeight: 2
+            });
+            map.fitBounds(bounds);
+            route.setMap(map);
+          })
+          .catch(error => {
+            console.error(error);
+          });
+      }
+    </script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
+    </script>
+  </body>
+</html>
